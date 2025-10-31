@@ -1,0 +1,263 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Taoda.ViewModels"
+             xmlns:converters="clr-namespace:Taoda.Converters"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="Taoda.Views.MainView"
+             x:DataType="vm:MainViewModel">
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:MainViewModel />
+  </Design.DataContext>
+
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/> <!-- 标题栏 -->
+      <RowDefinition Height="Auto"/> <!-- 文件选择区域 -->
+      <RowDefinition Height="*"/>    <!-- 数据预览区域 -->
+      <RowDefinition Height="Auto"/> <!-- 操作按钮区域 -->
+      <RowDefinition Height="Auto"/> <!-- 状态栏 -->
+    </Grid.RowDefinitions>
+    
+    <!-- 标题栏 -->
+    <Border Grid.Row="0" Background="#f5f5f5" CornerRadius="4" Padding="16,12" Margin="0,0,0,16">
+      <TextBlock Text="Excel Word 套打软件" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+    </Border>
+    
+    <!-- 文件选择区域 -->
+    <Border Grid.Row="1" Background="White" BorderBrush="#e0e0e0" BorderThickness="1" CornerRadius="4" Padding="16" Margin="0,0,0,16">
+      <StackPanel Spacing="12">
+        <TextBlock Text="文件选择" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+        
+        <!-- Excel 文件选择 -->
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <TextBlock Grid.Column="0" Text="Excel文件:" VerticalAlignment="Center"/>
+          <TextBox Grid.Column="1" Text="{Binding ExcelFilePath}" IsReadOnly="True" Margin="8,0"/>
+          <Button Grid.Column="2" Content="选择文件" Command="{Binding SelectExcelFileCommand}" Margin="8,0,0,0"/>
+        </Grid>
+        
+        <!-- Word 模板选择 -->
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <TextBlock Grid.Column="0" Text="Word模板:" VerticalAlignment="Center"/>
+          <TextBox Grid.Column="1" Text="{Binding TemplateFilePath}" IsReadOnly="True" Margin="8,0"/>
+          <Button Grid.Column="2" Content="选择模板" Command="{Binding SelectTemplateFileCommand}" Margin="8,0,0,0"/>
+        </Grid>
+        
+        <!-- 输出目录选择 -->
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <TextBlock Grid.Column="0" Text="输出目录:" VerticalAlignment="Center"/>
+          <TextBox Grid.Column="1" Text="{Binding OutputDirectory}" IsReadOnly="True" Margin="8,0"/>
+          <Button Grid.Column="2" Content="选择目录" Command="{Binding SelectOutputDirectoryCommand}" Margin="8,0,0,0"/>
+        </Grid>
+      </StackPanel>
+    </Border>
+    
+    <!-- 数据预览区域 -->
+    <Border Grid.Row="2" Background="White" BorderBrush="#e0e0e0" BorderThickness="1" CornerRadius="4" Padding="16" Margin="0,0,0,16">
+      <TabControl>
+        <!-- Excel数据预览 -->
+        <TabItem Header="Excel数据预览">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="16" Margin="0,0,0,12">
+              <TextBlock Text="{Binding ExcelData.TotalRows, StringFormat='数据行数: {0}'}" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding ExcelData.Headers.Count, StringFormat='列数: {0}'}" FontWeight="SemiBold"/>
+            </StackPanel>
+            
+            <ScrollViewer Grid.Row="1">
+              <StackPanel>
+                <!-- 列标题显示 -->
+                <TextBlock Text="列标题:" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <ItemsControl ItemsSource="{Binding ExcelData.Headers}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel/>
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Background="#e3f2fd" CornerRadius="4" Padding="8,4" Margin="4">
+                        <TextBlock Text="{Binding}" FontSize="12"/>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                
+                <!-- 数据预览 -->
+                <TextBlock Text="数据预览 (前5行):" FontWeight="SemiBold" Margin="0,16,0,8"/>
+                <ScrollViewer MaxHeight="300">
+                  <ItemsControl ItemsSource="{Binding ExcelData.Rows}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border BorderBrush="#e0e0e0" BorderThickness="1" Margin="0,2" Padding="8">
+                          <StackPanel>
+                            <TextBlock Text="{Binding ., Converter={x:Static converters:DictionaryToStringConverter.Instance}}" 
+                                       TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"/>
+                          </StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </ScrollViewer>
+              </StackPanel>
+            </ScrollViewer>
+          </Grid>
+        </TabItem>
+        
+        <!-- 模板变量 -->
+        <TabItem Header="模板变量">
+          <ScrollViewer>
+            <StackPanel>
+              <TextBlock Text="{Binding TemplateModel.Variables.Count, StringFormat='模板变量数量: {0}'}" FontWeight="SemiBold" Margin="0,0,0,12"/>
+              <ItemsControl ItemsSource="{Binding TemplateModel.Variables}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Background="#fff3e0" CornerRadius="4" Padding="8,4" Margin="4">
+                      <TextBlock Text="{Binding}" FontSize="12"/>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+        
+        <!-- 变量匹配 -->
+        <TabItem Header="变量匹配">
+          <ScrollViewer>
+            <StackPanel Spacing="16">
+              <!-- 匹配状态概览 -->
+              <Border Background="{Binding VariableMatching.IsFullyMatched, Converter={x:Static converters:BooleanToColorConverter.Instance}}" 
+                      CornerRadius="4" Padding="12">
+                <TextBlock Text="{Binding VariableMatching.IsFullyMatched, Converter={x:Static converters:BooleanToMatchStatusConverter.Instance}}" 
+                           FontWeight="SemiBold" HorizontalAlignment="Center"/>
+              </Border>
+              
+              <!-- 已匹配变量 -->
+              <StackPanel>
+                <TextBlock Text="{Binding VariableMatching.MatchedVariables.Count, StringFormat='已匹配变量 ({0}):'}" 
+                           FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <ItemsControl ItemsSource="{Binding VariableMatching.MatchedVariables}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel/>
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Background="#e8f5e8" CornerRadius="4" Padding="8,4" Margin="4">
+                        <TextBlock Text="{Binding}" FontSize="12"/>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+              
+              <!-- 未匹配的Excel列 -->
+              <StackPanel>
+                <TextBlock Text="{Binding VariableMatching.UnmatchedExcelColumns.Count, StringFormat='未匹配的Excel列 ({0}):'}" 
+                           FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <ItemsControl ItemsSource="{Binding VariableMatching.UnmatchedExcelColumns}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel/>
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Background="#ffebee" CornerRadius="4" Padding="8,4" Margin="4">
+                        <TextBlock Text="{Binding}" FontSize="12"/>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+              
+              <!-- 未匹配的模板变量 -->
+              <StackPanel>
+                <TextBlock Text="{Binding VariableMatching.UnmatchedTemplateVariables.Count, StringFormat='未匹配的模板变量 ({0}):'}" 
+                           FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <ItemsControl ItemsSource="{Binding VariableMatching.UnmatchedTemplateVariables}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel/>
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Background="#fff3e0" CornerRadius="4" Padding="8,4" Margin="4">
+                        <TextBlock Text="{Binding}" FontSize="12"/>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+      </TabControl>
+    </Border>
+    
+    <!-- 操作按钮区域 -->
+    <Border Grid.Row="3" Background="White" BorderBrush="#e0e0e0" BorderThickness="1" CornerRadius="4" Padding="16" Margin="0,0,0,16">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        
+        <!-- 进度条 -->
+        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+          <ProgressBar Value="{Binding ProgressValue}" Maximum="{Binding ProgressMaximum}" 
+                       Height="8" IsVisible="{Binding IsProcessing}"/>
+          <TextBlock Text="{Binding ProgressValue, StringFormat='进度: {0}%'}" 
+                     FontSize="12" Margin="0,4,0,0" IsVisible="{Binding IsProcessing}"/>
+        </StackPanel>
+        
+        <!-- 生成按钮 -->
+        <Button Grid.Column="1" Content="开始生成" Command="{Binding GenerateDocumentsCommand}" 
+                IsEnabled="{Binding CanGenerate}" Padding="24,8" FontWeight="SemiBold"
+                Background="#2196f3" Foreground="White"/>
+      </Grid>
+    </Border>
+    
+    <!-- 状态栏 -->
+    <Border Grid.Row="4" Background="#f5f5f5" CornerRadius="4" Padding="12,8">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        
+        <Ellipse Grid.Column="0" Width="8" Height="8" Fill="{Binding IsProcessing, Converter={x:Static converters:BooleanToStatusColorConverter.Instance}}" 
+                 VerticalAlignment="Center" Margin="0,0,8,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding StatusMessage}" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="2" Text="就绪" 
+                   FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>
